@@ -10,3 +10,14 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+/code/code.iml
+/solutions/solutions.iml
+/.idea/libraries/lib.xml
+/.idea/libraries/lib1.xml
+/.idea/.gitignore
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/ThinkDataStructures.iml
+/.idea/vcs.xml
+/out/
+/solutions/src/resources/en.wikipedia.org/wiki/
