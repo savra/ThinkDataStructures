@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.allendowney.thinkdast;
 
@@ -82,7 +82,13 @@ public class MyLinkedList<E> implements List<E> {
 
 	@Override
 	public void add(int index, E element) {
-		//TODO: FILL THIS IN!
+		if (index == 0) {
+			head = new Node(element, head);
+		} else {
+			Node node = getNode(index-1);
+			node.next = new Node(element, node.next);
+		}
+		size++;
 	}
 
 	@Override
@@ -143,7 +149,14 @@ public class MyLinkedList<E> implements List<E> {
 
 	@Override
 	public int indexOf(Object target) {
-		//TODO: FILL THIS IN!
+		int i = 0;
+
+		for(Node currentNode = head; currentNode != null; currentNode = currentNode.next, i++) {
+			if (equals(currentNode.data, target)) {
+				return i;
+			}
+		}
+
 		return -1;
 	}
 
@@ -208,8 +221,18 @@ public class MyLinkedList<E> implements List<E> {
 
 	@Override
 	public E remove(int index) {
-		//TODO: FILL THIS IN!
-		return null;
+		Node current = getNode(index);
+
+		if (index != 0) {
+			Node prev = getNode(index - 1);
+			prev.next = current.next;
+		} else {
+			head = current.next;
+		}
+
+		size--;
+
+		return current.data;
 	}
 
 	@Override
