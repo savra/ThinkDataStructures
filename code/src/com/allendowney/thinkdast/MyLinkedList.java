@@ -121,7 +121,6 @@ public class MyLinkedList<E> implements List<E> {
 		for (Object obj: collection) {
 			if (!contains(obj)) {
 				return false;
-
 			}
 		}
 		return true;
