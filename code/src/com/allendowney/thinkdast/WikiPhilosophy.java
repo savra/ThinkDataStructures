@@ -1,7 +1,9 @@
 package com.allendowney.thinkdast;
 
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 
 import org.jsoup.nodes.Element;
@@ -44,14 +46,16 @@ public class WikiPhilosophy {
      * @throws IOException
      */
     public static void testConjecture(String destination, String source, int limit) throws IOException {
+        String currentSource = source;
+        String basePath = "https://en.wikipedia.org";
 
-        Elements elements = wf.fetchWikipedia(source);
+        for (int i = 0; i < limit; i++) {
+            visited.add(currentSource);
+            Elements paragraphs = wf.fetchWikipedia(currentSource);
+            currentSource = basePath + findFirstValidLink(paragraphs);
 
-        for (Element node : elements) {
-            if (recursiveDFS(node) != null) {
-                System.out.println("Philosophy found");
-            } else {
-                System.out.println("Philosophy not found");
+            if (currentSource.equals(destination)) {
+                System.out.printf("Philosophy found after %d iterations%n", i);
             }
         }
 
@@ -62,46 +66,85 @@ public class WikiPhilosophy {
         if (!(root instanceof TextNode)) {
             Element element = (Element) root;
             if ("a".equals(element.tag().getName())) {
-                if (element.attributes().get("href").endsWith("/wiki/Philosophy")) {
-                    visited.add(element.attributes().get("href"));
-                    return element;
-                } else {
-                    visited.add(element.attributes().get("href"));
-                }
+                return element;
             }
         }
 
         for (Node node : root.childNodes()) {
-            Node targetNode = recursiveDFS(node);
+            if (node instanceof TextNode) {
+                continue;
+            }
 
-            if (targetNode != null) {
-                if (targetNode.parent().getClass() == Element.class) {
-                    if (targetNode.childNodeSize() == 1
-                            && targetNode.childNode(0).getClass() == TextNode.class
-                            && ((TextNode) targetNode.childNode(0)).text().startsWith("P")) {
-                        if (!((Element) targetNode.parent()).tag().getName().equals("i")) {
+            Node href = recursiveDFS(node);
 
-                            int i = targetNode.siblingIndex();
+            if (isValidLink(href)) {
+                return href;
+            }
+        }
 
-                            if (i == 0 || i == targetNode.parent().childNodeSize() - 1
-                                    || (targetNode.parent().childNode(i - 1).getClass() == TextNode.class
-                                    && targetNode.parent().childNode(i + 1).getClass() == TextNode.class)) {
-                                TextNode prev = (TextNode) targetNode.parent().childNode(i - 1);
-                                TextNode next = (TextNode) targetNode.parent().childNode(i + 1);
+        return null;
+    }
 
-                                if (prev.text().charAt(prev.text().length() - 1) == '('
-                                        && next.text().charAt(0) == ')') {
-                                    return targetNode;
-                                }
-                            }
+    private static String findFirstValidLink(Elements paragraphs) {
+        for (Element paragraph : paragraphs) {
+            Node nodeContainedLink = recursiveDFS(paragraph);
+
+            if (nodeContainedLink != null) {
+                return nodeContainedLink.attributes().get("href");
+            }
+        }
+
+        return null;
+    }
+
+    private static boolean isValidLink(Node nodeContainedLink) {
+        if (nodeContainedLink == null) {
+            return false;
+        }
+
+        String href = nodeContainedLink.attributes().get("href");
+
+        if (href.startsWith("#")) {
+            return false;
+        }
+
+        if (!href.startsWith("/")) {
+            return false;
+        }
+
+        Node previousSibling = nodeContainedLink.previousSibling();
+
+        if (previousSibling instanceof TextNode) {
+            Deque<Character> characters = new ArrayDeque<>();
+            String text = ((TextNode) previousSibling).text();
+
+            for (int i = text.length() - 1; i >= 0; i--) {
+                if (characters.isEmpty()) {
+                    if (text.charAt(i) == ')' || text.charAt(i) == '(') {
+                        characters.push(text.charAt(i));
+                    }
+                } else {
+                    if (text.charAt(i) == ')') {
+                        if (characters.peek() == '(') {
+                            characters.pop();
+                        } else {
+                            characters.push(')');
+                        }
+                    } else if (text.charAt(i) == '('){
+                        if (characters.peek() == ')') {
+                            characters.pop();
+                        } else {
+                            characters.push('(');
                         }
                     }
                 }
             }
 
-            return targetNode;
+            if (!characters.isEmpty()) {
+                return false;
+            }
         }
 
-        return null;
+        return true;
     }
 }
