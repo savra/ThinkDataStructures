@@ -17,7 +17,6 @@ import org.jsoup.select.Elements;
  *
  */
 public class TermCounter {
-
 	private Map<String, Integer> map;
 	private String label;
 
